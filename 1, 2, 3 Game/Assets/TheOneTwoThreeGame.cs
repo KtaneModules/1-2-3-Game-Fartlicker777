@@ -12,15 +12,18 @@ public class TheOneTwoThreeGame : MonoBehaviour {
     public KMAudio Audio;
     public KMSelectable[] PlayerCards;
     public TextMesh[] TempText;
-    public SpriteRenderer[] Players;
+    public TextMesh NameSpace;
+    public SpriteRenderer Players;
     public Sprite[] PlayersSprites;
+    public SpriteRenderer[] LastPlayed;
+    public Sprite[] PossibleCards;
 
     static int[][] NameCards = new int[13][] {
       new int[9] {3, 3, 1, 1, 2, 3, 1, 2, 2}, //Changyeop
       new int[9] {3, 3, 3, 2, 2, 2, 1, 1, 1}, //Eunji
       new int[9] {1, 2, 2, 2, 1, 3, 3, 1, 3}, //Gura
       new int[9] {3, 2, 2, 1, 2, 3, 1, 1, 3}, //Jinho
-      new int[9] {2, 2, 1, 2, 3, 3, 1, 3, 1}, //Jungkook
+      new int[9] {2, 2, 1, 2, 3, 3, 1, 3, 1}, //Jungmoon
       new int[9] {1, 2, 3, 2, 1, 3, 2, 1, 3}, //Junseok
       new int[9] {2, 1, 1, 2, 3, 3, 3, 2, 1}, //Kyungran
       new int[9] {1, 1, 3, 2, 2, 2, 3, 3, 1}, //Minseo
@@ -51,7 +54,7 @@ public class TheOneTwoThreeGame : MonoBehaviour {
     int CardOnePresses, CardTwoPresses, CardThreePresses;
     int Index;
 
-    string[] Names = {"Changyeop", "Eunji", "Gura", "Jinho", "Jungkook", "Junseok", "Kyungran", "Minseo", "Minsoo", "Poong", "Sangmin", "Sunggyu", "Yuram"};
+    string[] Names = {"Changyeop", "Eunji", "Gura", "Jinho", "Jungmoon", "Junseok", "Kyungran", "Minseo", "Minsoo", "Poong", "Sangmin", "Sunggyu", "Yuram"};
 
     static int moduleIdCounter = 1;
     int moduleId;
@@ -65,8 +68,11 @@ public class TheOneTwoThreeGame : MonoBehaviour {
     }
 
     void Start () {
+      LastPlayed[0].GetComponent<SpriteRenderer>().sprite = null;
       NameSelector = UnityEngine.Random.Range(0, 13);
       ProfileSelector = UnityEngine.Random.Range(0, 12);
+      Players.GetComponent<SpriteRenderer>().sprite = PlayersSprites[ProfileSelector];
+      NameSpace.text = Names[NameSelector];
       Debug.LogFormat("[The 1, 2, 3 Game {0}] The selected name is {1} and the selected profile is the {2} one.", moduleId, Names[NameSelector], NthChooser(ProfileSelector));
       //Determines which of the two decks is the opponent's hand
       for (int i = 0; i < 9; i++) {
@@ -130,6 +136,8 @@ public class TheOneTwoThreeGame : MonoBehaviour {
           Debug.LogFormat("[The 1, 2, 3 Game {0}] You played a 1, and they played a 1. You tied this round. Currently you are at {1} win(s) and they are at {2} win(s).", moduleId, YourWins, EnemyWins);
         }
         CardOnePresses++;
+        LastPlayed[0].GetComponent<SpriteRenderer>().sprite = PossibleCards[0];
+        LastPlayed[1].GetComponent<SpriteRenderer>().sprite = PossibleCards[OpponentsHand[Index] - 1];
         Index++;
       }
       else if (Card == PlayerCards[1] && CardTwoPresses != 3) {
@@ -145,6 +153,8 @@ public class TheOneTwoThreeGame : MonoBehaviour {
           Debug.LogFormat("[The 1, 2, 3 Game {0}] You played a 2, and they played a 2. You tied this round. Currently you are at {1} win(s) and they are at {2} win(s).", moduleId, YourWins, EnemyWins);
         }
         CardTwoPresses++;
+        LastPlayed[0].GetComponent<SpriteRenderer>().sprite = PossibleCards[1];
+        LastPlayed[1].GetComponent<SpriteRenderer>().sprite = PossibleCards[OpponentsHand[Index] - 1];
         Index++;
       }
       else if (Card == PlayerCards[2] && CardThreePresses != 3) {
@@ -156,6 +166,8 @@ public class TheOneTwoThreeGame : MonoBehaviour {
           Debug.LogFormat("[The 1, 2, 3 Game {0}] You played a 3, and they played a 3. You tied this round. Currently you are at {1} win(s) and they are at {2} win(s).", moduleId, YourWins, EnemyWins);
         }
         CardThreePresses++;
+        LastPlayed[0].GetComponent<SpriteRenderer>().sprite = PossibleCards[2];
+        LastPlayed[1].GetComponent<SpriteRenderer>().sprite = PossibleCards[OpponentsHand[Index] - 1];
         Index++;
       }
       if (Index == 9) {
@@ -182,9 +194,9 @@ public class TheOneTwoThreeGame : MonoBehaviour {
     }
 
     void Update () {
-      TempText[0].text = (3-CardOnePresses).ToString();
-      TempText[1].text = (3-CardTwoPresses).ToString();
-      TempText[2].text = (3-CardThreePresses).ToString();
+      TempText[0].text = "X " + (3-CardOnePresses).ToString();
+      TempText[1].text = "X " + (3-CardTwoPresses).ToString();
+      TempText[2].text = "X " + (3-CardThreePresses).ToString();
       TempText[3].text = YourWins.ToString();
       TempText[4].text = EnemyWins.ToString();
     }
