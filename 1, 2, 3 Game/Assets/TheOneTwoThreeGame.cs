@@ -17,6 +17,7 @@ public class TheOneTwoThreeGame : MonoBehaviour {
     public Sprite[] PlayersSprites;
     public SpriteRenderer[] LastPlayed;
     public Sprite[] PossibleCards;
+    public Sprite Background;
 
     static int[][] NameCards = new int[13][] {
       new int[9] {3, 3, 1, 1, 2, 3, 1, 2, 2}, //Changyeop
@@ -56,6 +57,9 @@ public class TheOneTwoThreeGame : MonoBehaviour {
 
     string[] Names = {"Changyeop", "Eunji", "Gura", "Jinho", "Jungmoon", "Junseok", "Kyungran", "Minseo", "Minsoo", "Poong", "Sangmin", "Sunggyu", "Yuram"};
 
+    bool Animating;
+    bool? YouWon = true;
+
     static int moduleIdCounter = 1;
     int moduleId;
     private bool moduleSolved;
@@ -73,7 +77,7 @@ public class TheOneTwoThreeGame : MonoBehaviour {
       ProfileSelector = UnityEngine.Random.Range(0, 12);
       Players.GetComponent<SpriteRenderer>().sprite = PlayersSprites[ProfileSelector];
       NameSpace.text = Names[NameSelector];
-      Debug.LogFormat("[The 1, 2, 3 Game {0}] The selected name is {1} and the selected profile is the {2} one.", moduleId, Names[NameSelector], NthChooser(ProfileSelector));
+      Debug.LogFormat("[The 1, 2, 3 Game #{0}] The selected name is {1} and the selected profile is the {2} one.", moduleId, Names[NameSelector], NthChooser(ProfileSelector));
       //Determines which of the two decks is the opponent's hand
       for (int i = 0; i < 9; i++) {
         if (NameCards[NameSelector][i] > ProfileCards[ProfileSelector][i]) {
@@ -89,25 +93,25 @@ public class TheOneTwoThreeGame : MonoBehaviour {
         for (int i = 0; i < 9; i++) {
           OpponentsHand[i] = NameCards[NameSelector][i];
         }
-        Debug.LogFormat("[The 1, 2, 3 Game {0}] The name's hand won, using their hand...", moduleId);
+        Debug.LogFormat("[The 1, 2, 3 Game #{0}] The name's hand won, using their hand...", moduleId);
       }
       else if (NameCardWins < ProfileCardWins) {
         for (int i = 0; i < 9; i++) {
           OpponentsHand[i] = ProfileCards[ProfileSelector][i];
         }
-        Debug.LogFormat("[The 1, 2, 3 Game {0}] The profile's hand won, using their hand...", moduleId);
+        Debug.LogFormat("[The 1, 2, 3 Game #{0}] The profile's hand won, using their hand...", moduleId);
       }
-      else if (LastNameWin > LastProfileWin) {
+      else if (LastNameWin < LastProfileWin) {
         for (int i = 0; i < 9; i++) {
           OpponentsHand[i] = NameCards[NameSelector][i];
         }
-        Debug.LogFormat("[The 1, 2, 3 Game {0}] There was a tie. The name's hand got to their final amount first. Using the name's hand...", moduleId);
+        Debug.LogFormat("[The 1, 2, 3 Game #{0}] There was a tie. The name's hand got to their final amount first. Using the name's hand...", moduleId);
       }
       else {
         for (int i = 0; i < 9; i++) {
           OpponentsHand[i] = ProfileCards[ProfileSelector][i];
         }
-        Debug.LogFormat("[The 1, 2, 3 Game {0}] There was a tie. The profile's hand got to their final amount first. Using the profile's hand...", moduleId);
+        Debug.LogFormat("[The 1, 2, 3 Game #{0}] There was a tie. The profile's hand got to their final amount first. Using the profile's hand...", moduleId);
       }
     }
 
@@ -127,62 +131,98 @@ public class TheOneTwoThreeGame : MonoBehaviour {
     }
 
     void CardPress (KMSelectable Card) {
+      if (Animating) {
+        return;
+      }
+      Audio.PlaySoundAtTransform("Flip", Card.transform);
       if (Card == PlayerCards[0] && CardOnePresses != 3) {
         if (OpponentsHand[Index] != 1) {
           EnemyWins++;
-          Debug.LogFormat("[The 1, 2, 3 Game {0}] You played a 1, and they played a {1}. You lost the round. Currently you are at {2} win(s) and they are at {3} win(s).", moduleId, OpponentsHand[Index], YourWins, EnemyWins);
+          YouWon = false;
+          Debug.LogFormat("[The 1, 2, 3 Game #{0}] You played a 1, and they played a {1}. You lost the round. Currently you are at {2} win(s) and they are at {3} win(s).", moduleId, OpponentsHand[Index], YourWins, EnemyWins);
         }
         else {
-          Debug.LogFormat("[The 1, 2, 3 Game {0}] You played a 1, and they played a 1. You tied this round. Currently you are at {1} win(s) and they are at {2} win(s).", moduleId, YourWins, EnemyWins);
+          YouWon = null;
+          Debug.LogFormat("[The 1, 2, 3 Game #{0}] You played a 1, and they played a 1. You tied this round. Currently you are at {1} win(s) and they are at {2} win(s).", moduleId, YourWins, EnemyWins);
         }
         CardOnePresses++;
         LastPlayed[0].GetComponent<SpriteRenderer>().sprite = PossibleCards[0];
-        LastPlayed[1].GetComponent<SpriteRenderer>().sprite = PossibleCards[OpponentsHand[Index] - 1];
-        Index++;
+        StartCoroutine(Flip(YouWon));
       }
       else if (Card == PlayerCards[1] && CardTwoPresses != 3) {
         if (OpponentsHand[Index] > 2) {
           EnemyWins++;
-          Debug.LogFormat("[The 1, 2, 3 Game {0}] You played a 2, and they played a 3. You lost the round. Currently you are at {1} win(s) and they are at {2} win(s).", moduleId, YourWins, EnemyWins);
+          YouWon = false;
+          Debug.LogFormat("[The 1, 2, 3 Game #{0}] You played a 2, and they played a 3. You lost the round. Currently you are at {1} win(s) and they are at {2} win(s).", moduleId, YourWins, EnemyWins);
         }
         else if (OpponentsHand[Index] < 2) {
           YourWins++;
-          Debug.LogFormat("[The 1, 2, 3 Game {0}] You played a 2, and they played a 1. You won the round. Currently you are at {1} win(s) and they are at {2} win(s).", moduleId, YourWins, EnemyWins);
+          YouWon = true;
+          Debug.LogFormat("[The 1, 2, 3 Game #{0}] You played a 2, and they played a 1. You won the round. Currently you are at {1} win(s) and they are at {2} win(s).", moduleId, YourWins, EnemyWins);
         }
         else {
-          Debug.LogFormat("[The 1, 2, 3 Game {0}] You played a 2, and they played a 2. You tied this round. Currently you are at {1} win(s) and they are at {2} win(s).", moduleId, YourWins, EnemyWins);
+          YouWon = null;
+          Debug.LogFormat("[The 1, 2, 3 Game #{0}] You played a 2, and they played a 2. You tied this round. Currently you are at {1} win(s) and they are at {2} win(s).", moduleId, YourWins, EnemyWins);
         }
         CardTwoPresses++;
         LastPlayed[0].GetComponent<SpriteRenderer>().sprite = PossibleCards[1];
-        LastPlayed[1].GetComponent<SpriteRenderer>().sprite = PossibleCards[OpponentsHand[Index] - 1];
-        Index++;
+        StartCoroutine(Flip(YouWon));
       }
       else if (Card == PlayerCards[2] && CardThreePresses != 3) {
         if (OpponentsHand[Index] != 3) {
           YourWins++;
-          Debug.LogFormat("[The 1, 2, 3 Game {0}] You played a 3, and they played a {1}. You win the round. Currently you are at {2} win(s) and they are at {3} win(s).", moduleId, OpponentsHand[Index], YourWins, EnemyWins);
+          YouWon = true;
+          Debug.LogFormat("[The 1, 2, 3 Game #{0}] You played a 3, and they played a {1}. You win the round. Currently you are at {2} win(s) and they are at {3} win(s).", moduleId, OpponentsHand[Index], YourWins, EnemyWins);
         }
         else {
-          Debug.LogFormat("[The 1, 2, 3 Game {0}] You played a 3, and they played a 3. You tied this round. Currently you are at {1} win(s) and they are at {2} win(s).", moduleId, YourWins, EnemyWins);
+          YouWon = null;
+          Debug.LogFormat("[The 1, 2, 3 Game #{0}] You played a 3, and they played a 3. You tied this round. Currently you are at {1} win(s) and they are at {2} win(s).", moduleId, YourWins, EnemyWins);
         }
         CardThreePresses++;
         LastPlayed[0].GetComponent<SpriteRenderer>().sprite = PossibleCards[2];
-        LastPlayed[1].GetComponent<SpriteRenderer>().sprite = PossibleCards[OpponentsHand[Index] - 1];
-        Index++;
+        StartCoroutine(Flip(YouWon));
       }
+    }
+
+    IEnumerator Flip (bool? x) {
+      Animating = true;
+      yield return new WaitForSecondsRealtime(.2f);
+      Audio.PlaySoundAtTransform("Flip", LastPlayed[1].transform);
+      LastPlayed[1].GetComponent<SpriteRenderer>().sprite = PossibleCards[OpponentsHand[Index] - 1];
+      yield return new WaitForSecondsRealtime(.5f);
+      if (YouWon == true) {
+        Audio.PlaySoundAtTransform("Win", LastPlayed[1].transform);
+      }
+      else if (YouWon == false) {
+        Audio.PlaySoundAtTransform("Lose", LastPlayed[1].transform);
+      }
+      else {
+        Audio.PlaySoundAtTransform("Tie", LastPlayed[1].transform);
+      }
+      yield return new WaitForSecondsRealtime(.5f);
+      LastPlayed[1].GetComponent<SpriteRenderer>().sprite = Background;
+      Index++;
       if (Index == 9) {
         Check();
       }
+      Animating = false;
     }
 
     void Check () {
       if (YourWins == 6) {
-        Debug.LogFormat("[The 1, 2, 3 Game {0}] Congratulations, you have beat the shit out of {1}!", moduleId, Names[NameSelector]);
+        Debug.LogFormat("[The 1, 2, 3 Game #{0}] Congratulations, you have beat the shit out of {1}!", moduleId, Names[NameSelector]);
         GetComponent<KMBombModule>().HandlePass();
+        if (Names[NameSelector] == "Jinho" && Bomb.GetSolvableModuleNames().Contains("English Entries")) {
+          Audio.PlaySoundAtTransform("YouAreGreat", this.transform);
+        }
+        else {
+          Audio.PlaySoundAtTransform("Solve", this.transform);
+        }
+        NameSpace.text = "DEFEATED";
         moduleSolved = true;
       }
       else {
-        Debug.LogFormat("[The 1, 2, 3 Game {0}] Unfortunately, you have beaten by {1}. Resetting to the initial state...", moduleId, Names[NameSelector]);
+        Debug.LogFormat("[The 1, 2, 3 Game #{0}] Unfortunately, you have beaten by {1}. Resetting to the initial state...", moduleId, Names[NameSelector]);
         GetComponent<KMBombModule>().HandleStrike();
         Index &= 0;
         CardOnePresses &= 0;
@@ -220,7 +260,6 @@ public class TheOneTwoThreeGame : MonoBehaviour {
           PlayerCards[int.Parse(Command) - 1].OnInteract();
         }
       }
-      yield return new WaitForSecondsRealtime(.1f);
     }
 
     IEnumerator TwitchHandleForcedSolve () {
@@ -234,6 +273,7 @@ public class TheOneTwoThreeGame : MonoBehaviour {
         else {
           yield return ProcessTwitchCommand("1");
         }
+        yield return new WaitForSecondsRealtime(1.2f);
       }
     }
 }

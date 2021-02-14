@@ -23,10 +23,13 @@ MonoBehaviour:
     Manual by ItzShaun and Grunkle Squeaky.
 
 
+    Graphics by ItzShaun, highlights by Marksam.
+
+
     Manual can be found on ktane.timwi.de
 
 
     If there are any bugs, contact Fartlicker777#9169 on Discord.'
   version: 
   outputFolder: build
-  previewImage: {fileID: 0}
+  previewImage: {fileID: 2800000, guid: 531daf1a1f6be4040b5bb2bf2653d914, type: 3}
